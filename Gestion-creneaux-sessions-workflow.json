@@ -1,0 +1,293 @@
+{
+  "name": "Brique 16 - Gestion de créneaux et de sessions",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "1",
+      "name": "Déclencheur manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [220, 320]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "participant", "value": "Claire Martin" },
+            { "name": "email", "value": "claire.martin@example.com" },
+            { "name": "telephone", "value": "0677889900" },
+            { "name": "demande", "value": "Inscription atelier collectif" },
+            { "name": "statut", "value": "reçu" }
+          ]
+        }
+      },
+      "id": "2",
+      "name": "Demande d'inscription",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [460, 320]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "session_id", "value": "SESSION-28-05-A" },
+            { "name": "creneau", "value": "28/05/2026 - 14:00" },
+            { "name": "places_max", "value": "8" },
+            { "name": "places_restantes", "value": "3" }
+          ]
+        }
+      },
+      "id": "3",
+      "name": "Chercher créneau disponible",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [700, 320]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{Number($json[\"places_restantes\"])}}",
+              "operation": "larger",
+              "value2": 0
+            }
+          ]
+        }
+      },
+      "id": "4",
+      "name": "Place disponible ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [940, 320]
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => { const restantes = Number(item.json.places_restantes || 0); item.json.places_restantes = String(restantes - 1); item.json.statut = 'confirmé'; item.json.message_confirmation = 'Votre place est réservée pour la session ' + item.json.creneau; return item; });"
+      },
+      "id": "5",
+      "name": "Réserver la place",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1180, 200]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "confirmation", "value": "Confirmation envoyée" },
+            { "name": "lien_visio", "value": "https://visioconf.exemple.fr/session-collective" }
+          ]
+        }
+      },
+      "id": "6",
+      "name": "Envoyer confirmation",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [1420, 200]
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "hours"
+      },
+      "id": "7",
+      "name": "Attendre avant rappel",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1,
+      "position": [1660, 200]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "rappel", "value": "Rappel envoyé" },
+            { "name": "message_rappel", "value": "Votre session commence bientôt. Pensez à rejoindre la visio à l'heure." }
+          ]
+        }
+      },
+      "id": "8",
+      "name": "Envoyer rappel",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [1900, 200]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "statut_session", "value": "participant confirmé et session remplie automatiquement" },
+            { "name": "benefice", "value": "30 à 60 min gagnées par session organisée" }
+          ]
+        }
+      },
+      "id": "9",
+      "name": "Session organisée",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [2140, 200]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "statut", "value": "liste d'attente" },
+            { "name": "message_attente", "value": "Aucune place disponible sur ce créneau, proposition d'un autre créneau." }
+          ]
+        }
+      },
+      "id": "10",
+      "name": "Proposer autre créneau",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [1180, 440]
+    },
+    {
+      "parameters": {
+        "keepOnlySet": false,
+        "values": {
+          "string": [
+            { "name": "sortie", "value": "Gestion de créneaux et de sessions" }
+          ]
+        }
+      },
+      "id": "11",
+      "name": "Synthèse créneaux",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 2,
+      "position": [2380, 320]
+    }
+  ],
+  "connections": {
+    "Déclencheur manuel": {
+      "main": [
+        [
+          {
+            "node": "Demande d'inscription",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Demande d'inscription": {
+      "main": [
+        [
+          {
+            "node": "Chercher créneau disponible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Chercher créneau disponible": {
+      "main": [
+        [
+          {
+            "node": "Place disponible ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Place disponible ?": {
+      "main": [
+        [
+          {
+            "node": "Réserver la place",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Proposer autre créneau",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Réserver la place": {
+      "main": [
+        [
+          {
+            "node": "Envoyer confirmation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer confirmation": {
+      "main": [
+        [
+          {
+            "node": "Attendre avant rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attendre avant rappel": {
+      "main": [
+        [
+          {
+            "node": "Envoyer rappel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Envoyer rappel": {
+      "main": [
+        [
+          {
+            "node": "Session organisée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Session organisée": {
+      "main": [
+        [
+          {
+            "node": "Synthèse créneaux",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Proposer autre créneau": {
+      "main": [
+        [
+          {
+            "node": "Synthèse créneaux",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "description": "Workflow de démonstration pour la brique 16 : gestion de créneaux et de sessions."
+  }
+}
+EOF && ls -l output/brique-16-gestion-creneaux-sessions-workflow.json
